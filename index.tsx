@@ -1,5 +1,6 @@
 import React, { useState, useRef, MouseEvent, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import emailjs from '@emailjs/browser';
 import {
   Terminal,
   Cpu,
@@ -389,11 +390,14 @@ const Shard = ({
   const [activeFilter, setActiveFilter] = useState<string>('All');
   const [formState, setFormState] = useState({ name: '', message: '' });
 
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
   // Reset states when section closes
   useEffect(() => {
     if (!isActive) {
       setCopied(false);
       setFormState({ name: '', message: '' });
+      setStatus('idle');
       setActiveFilter('All');
     }
   }, [isActive]);
@@ -405,12 +409,31 @@ const Shard = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.name || !formState.message) return;
-    const subject = `Inquiry from ${formState.name}`;
-    const body = `${formState.message}`;
-    window.location.href = `mailto:${CONFIG.identity.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    setStatus('sending');
+
+    try {
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          from_name: formState.name,
+          message: formState.message,
+          reply_to: CONFIG.identity.email,
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+      setStatus('success');
+      setFormState({ name: '', message: '' });
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (error) {
+      console.error('EmailJS Error:', error);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
   };
 
   const categories = ['All', ...Array.from(new Set(CONFIG.projects.map(p => p.category)))];
@@ -511,8 +534,12 @@ const Shard = ({
                     </div>
                   </div>
 
-                  <div className="relative aspect-square w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center group/profile">
-                    <User className="w-32 h-32 text-white/10 group-hover/profile:text-white/20 transition-colors duration-500" />
+                  <div className="relative h-[500px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
+                    <img
+                      src="image/portfolio.jpeg"
+                      alt="Profile"
+                      className="w-full h-[500px] object-cover transition-transform duration-500 group-hover/profile:scale-10"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   </div>
                 </div>
@@ -585,9 +612,35 @@ const Shard = ({
                   </div>
                   <div className="flex-1 bg-white/5 border border-white/10 p-8 flex flex-col justify-center">
                     <form onSubmit={handleFormSubmit} className="space-y-6">
-                      <input type="text" placeholder="NAME" className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none" />
-                      <textarea placeholder="MESSAGE..." rows={4} className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none resize-none" />
-                      <button type="submit" className="w-full py-4 bg-white text-black font-bold hover:bg-cyan-400 transition-colors">SEND PACKET</button>
+                      <input
+                        type="text"
+                        placeholder="NAME"
+                        value={formState.name}
+                        onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                        disabled={status === 'sending'}
+                        className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none disabled:opacity-50"
+                      />
+                      <textarea
+                        placeholder="MESSAGE..."
+                        rows={4}
+                        value={formState.message}
+                        onChange={(e) => setFormState(prev => ({ ...prev, message: e.target.value }))}
+                        disabled={status === 'sending'}
+                        className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none resize-none disabled:opacity-50"
+                      />
+                      <button
+                        type="submit"
+                        disabled={status === 'sending'}
+                        className={`w-full py-4 font-bold transition-colors ${status === 'success' ? 'bg-green-500 text-white' :
+                          status === 'error' ? 'bg-red-500 text-white' :
+                            'bg-white text-black hover:bg-cyan-400'
+                          }`}
+                      >
+                        {status === 'sending' ? 'SENDING...' :
+                          status === 'success' ? 'PACKET SENT' :
+                            status === 'error' ? 'FAILED - TRY AGAIN' :
+                              'SEND PACKET'}
+                      </button>
                     </form>
                   </div>
                 </div>
