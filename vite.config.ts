@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      // When deploying to GitHub Pages under a repository (e.g. username.github.io/portfolio/)
+      // set the base option so built asset URLs are prefixed correctly.
+      base: '/portfolio/',
       server: {
         port: 3000,
         host: '0.0.0.0',
