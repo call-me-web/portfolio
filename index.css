@@ -1,0 +1,6 @@
+/* Minimal placeholder to avoid 404 on GitHub Pages.
+   If you want Tailwind compiled CSS, set up Tailwind as a PostCSS plugin
+   and import it here using @tailwind directives. */
+
+html, body { height: 100%; }
+body { background-color: #050505; color: #fff; }
