@@ -536,7 +536,7 @@ const Shard = ({
 
                   <div className="relative h-[500px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
                     <img
-                      src="image/portfolio.jpeg"
+                      src={new URL('./image/portfolio.jpeg', import.meta.url).href}
                       alt="Profile"
                       className="w-full h-[500px] object-cover transition-transform duration-500 group-hover/profile:scale-10"
                     />
