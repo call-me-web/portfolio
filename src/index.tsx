@@ -336,6 +336,7 @@ interface DecorativeShardProps {
   delay?: number;
   baseTransform?: string;
   mousePos: { x: number; y: number };
+  key?: number | string;
   activeSection: SectionId | null;
 }
 
@@ -545,9 +546,9 @@ const Shard = ({
 
                   <div className="relative h-[500px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
                     <img
-                      src={new URL('./image/portfolio.jpeg', import.meta.url).href}
+                      src={new URL('./assets/portfolio.png', import.meta.url).href}
                       alt="Profile"
-                      className="w-full h-[500px] object-cover transition-transform duration-500 group-hover/profile:scale-10"
+                      className="w-full h-[550px] object-cover transition-transform duration-500 group-hover/profile:scale-4"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   </div>
@@ -691,15 +692,16 @@ const Page = () => {
         onMouseMove={handleMouseMove}
         className="relative w-full h-full flex items-center justify-center overflow-hidden"
       >
+        {!activeSection && (
+          <div className="absolute top-4 left-4 md:top-8 md:left-8 pointer-events-none z-0 transition-opacity duration-700">
+            <h1 className="text-5xl md:text-[10rem] font-[Syncopate] font-bold text-white/[0.03] leading-none select-none uppercase">
+              PORT<br />FOLIO
+            </h1>
+          </div>
+        )}
+
         <div className={`relative w-full h-full max-w-6xl max-h-[800px] flex items-center justify-center perspective-[1200px] ${activeSection ? 'z-50' : 'z-10'}`}>
 
-          {!activeSection && (
-            <div className="absolute top-10 left-6 md:top-20 md:left-20 pointer-events-none z-0 transition-opacity duration-700">
-              <h1 className="text-5xl md:text-[10rem] font-[Syncopate] font-bold text-white/[0.03] leading-none select-none">
-                PORT<br />FOLIO
-              </h1>
-            </div>
-          )}
 
           <div
             className={`absolute transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${activeSection ? 'opacity-0 scale-90 blur-lg pointer-events-none translate-y-[-50px]' : 'opacity-100 scale-100 blur-0'}`}
