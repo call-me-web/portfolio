@@ -1,4 +1,4 @@
-import React, { useState, useRef, MouseEvent, useEffect } from 'react';
+import React, { useState, useRef, MouseEvent, useEffect, useCallback, memo } from 'react';
 import { createRoot } from 'react-dom/client';
 import emailjs from '@emailjs/browser';
 import {
@@ -116,13 +116,13 @@ const FRAGMENT_SHADER = `
   }
 `;
 
-const WebGLBackground = ({ mousePos }: { mousePos: { x: number, y: number } }) => {
+const WebGLBackground = ({ mouseRef }: { mouseRef: React.RefObject<{ x: number, y: number }> }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext('webgl');
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: false, depth: false });
     if (!gl) return;
 
     const program = gl.createProgram()!;
@@ -152,22 +152,27 @@ const WebGLBackground = ({ mousePos }: { mousePos: { x: number, y: number } }) =
 
     let animationId: number;
     const render = (time: number) => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+
       gl.uniform1f(timeLoc, time * 0.001);
       gl.uniform2f(resLoc, canvas.width, canvas.height);
-      // Map mousePos (-1 to 1) to canvas space
-      const mx = (mousePos.x + 1) * 0.5 * canvas.width;
-      const my = (1 - (mousePos.y + 1) * 0.5) * canvas.height;
+
+      const mouse = mouseRef.current || { x: 0, y: 0 };
+      const mx = (mouse.x + 1) * 0.5 * canvas.width;
+      const my = (1 - (mouse.y + 1) * 0.5) * canvas.height;
       gl.uniform2f(mouseLoc, mx, my);
+
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       animationId = requestAnimationFrame(render);
     };
 
     animationId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animationId);
-  }, [mousePos]);
+  }, []); // Empty dependency array means this only runs once
 
   return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-60" />;
 };
@@ -282,19 +287,19 @@ type SectionId = 'home' | 'about' | 'projects' | 'stack' | 'contact';
 
 // --- Components ---
 
-const Background = ({ mousePos }: { mousePos: { x: number, y: number } }) => (
+const Background = memo(({ mouseRef }: { mouseRef: React.RefObject<{ x: number, y: number }> }) => (
   <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#020202]">
-    <WebGLBackground mousePos={mousePos} />
+    <WebGLBackground mouseRef={mouseRef} />
     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay"></div>
   </div>
-);
+));
 
 // --- Layout ---
 
-const RootLayout = ({ children, mousePos }: { children?: React.ReactNode, mousePos: { x: number, y: number } }) => {
+const RootLayout = ({ children, mouseRef }: { children?: React.ReactNode, mouseRef: React.RefObject<{ x: number, y: number }> }) => {
   return (
     <div className="min-h-screen text-white font-sans overflow-hidden select-none cursor-default selection:bg-cyan-500/30">
-      <Background mousePos={mousePos} />
+      <Background mouseRef={mouseRef} />
       <main className="relative z-10 w-full h-screen">
         {children}
       </main>
@@ -305,18 +310,22 @@ const RootLayout = ({ children, mousePos }: { children?: React.ReactNode, mouseP
 // --- Page Content ---
 
 const glassStyle = `
-  bg-gradient-to-br from-white/10 via-white/5 to-white/0 
-  backdrop-blur-2xl backdrop-saturate-150 
-  border border-white/10 border-t-white/20 border-l-white/20 
-  shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] 
-  ring-1 ring-white/5
+  bg-transparent
+  border border-white/10 border-t-white/20 border-l-white/20
+`;
+
+const decorativeGlassStyle = `
+  bg-gradient-to-br from-white/20 via-white/5 to-transparent 
+  backdrop-blur-3xl backdrop-saturate-[2] 
+  border border-white/15 border-t-white/30 border-l-white/30 
+  shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] 
+  ring-1 ring-white/20
 `;
 
 const hoverGlassStyle = `
-  hover:bg-white/10 
-  hover:border-white/30 hover:border-t-white/40
-  hover:shadow-[0_20px_50px_-5px_rgba(31,38,135,0.4),0_0_15px_rgba(103,232,249,0.2)] 
-  hover:brightness-110
+  hover:bg-white/[0.02] 
+  hover:border-white/20 hover:border-t-white/30
+  hover:shadow-none
 `;
 
 interface ShardProps {
@@ -325,7 +334,6 @@ interface ShardProps {
   children?: React.ReactNode;
   delay?: number;
   baseTransform?: string;
-  mousePos: { x: number; y: number };
   activeSection: SectionId | null;
   setActiveSection: (id: SectionId) => void;
   closeSection: () => void;
@@ -335,40 +343,45 @@ interface DecorativeShardProps {
   className: string;
   delay?: number;
   baseTransform?: string;
-  mousePos: { x: number; y: number };
-  key?: number | string;
   activeSection: SectionId | null;
 }
 
-const DecorativeShard = ({
+const DecorativeShard = memo(({
   className,
   delay = 0,
   baseTransform = "",
-  mousePos,
   activeSection
 }: DecorativeShardProps) => {
-  const pStrength = 15;
-  const rx = mousePos.y * pStrength;
-  const ry = mousePos.x * -pStrength;
-
   const isHidden = activeSection !== null;
 
   return (
     <div
       className={`
         absolute pointer-events-none will-change-transform
-        ${isHidden ? 'opacity-0 scale-75 blur-md' : 'opacity-30 mix-blend-soft-light'}
+        ${isHidden ? 'opacity-0 scale-75 blur-md' : 'opacity-80 saturate-[2.5]'}
         ${className}
-        ${glassStyle}
+        ${decorativeGlassStyle}
+        border-white/40 border-[1px]
       `}
       style={{
-        transform: `${baseTransform} rotateX(${rx}deg) rotateY(${ry}deg) translateZ(${delay * 10}px)`,
-        transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+        transform: `
+          ${baseTransform} 
+          translate3d(calc(var(--mx) * ${delay * 40}px), calc(var(--my) * ${delay * 40}px), ${delay * 20}px)
+          rotateX(calc(var(--my) * 20deg)) 
+          rotateY(calc(var(--mx) * -20deg))
+        `,
+        transition: isHidden
+          ? 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
+          : 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
         zIndex: 5
       }}
-    />
+    >
+      {/* Prismatic edge highlight */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-purple-300/30 to-transparent" />
+    </div>
   );
-};
+});
 
 const Shard = ({
   id,
@@ -376,15 +389,10 @@ const Shard = ({
   children,
   delay = 0,
   baseTransform = "",
-  mousePos,
   activeSection,
   setActiveSection,
   closeSection
 }: ShardProps) => {
-  const pStrength = 25;
-  const rx = mousePos.y * pStrength;
-  const ry = mousePos.x * -pStrength;
-
   const isActive = activeSection === id;
   const isHidden = activeSection !== null && activeSection !== id;
   const [copied, setCopied] = useState(false);
@@ -472,13 +480,32 @@ const Shard = ({
       style={{
         transform: isActive
           ? 'translate3d(0,0,0) rotateX(0) rotateY(0)'
-          : `${baseTransform} rotateX(${rx}deg) rotateY(${ry}deg) translateZ(${delay * 15}px)`,
+          : `${baseTransform} rotateX(calc(var(--my) * 25deg)) rotateY(calc(var(--mx) * -25deg)) translateZ(${delay * 15}px)`,
         clipPath: isActive ? 'none' : undefined,
         ...transitionStyle
       }}
     >
       {!isActive && (
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        <>
+          {/* Prismatic edge highlight */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-purple-300/10 to-transparent pointer-events-none" />
+        </>
+      )}
+
+      {/* Premium Window Accents for Active State */}
+      {isActive && (
+        <>
+          <div className="absolute top-0 left-0 w-12 h-px bg-gradient-to-r from-cyan-400 to-transparent z-10" />
+          <div className="absolute top-0 left-0 w-px h-12 bg-gradient-to-b from-cyan-400 to-transparent z-10" />
+          <div className="absolute bottom-0 right-0 w-12 h-px bg-gradient-to-l from-cyan-400 to-transparent z-10" />
+          <div className="absolute bottom-0 right-0 w-px h-12 bg-gradient-to-t from-cyan-400 to-transparent z-10" />
+          <div className="absolute top-0 right-0 p-1 flex gap-1 z-10 pointer-events-none">
+            <div className="w-1 h-1 bg-white/20" />
+            <div className="w-1 h-1 bg-white/40" />
+            <div className="w-1 h-1 bg-cyan-400" />
+          </div>
+        </>
       )}
 
       <div className={`
@@ -498,25 +525,35 @@ const Shard = ({
         )}
 
         {isActive && (
-          <div className="w-full h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6 shrink-0">
-              <div className="flex items-center gap-4 text-left">
-                <div className="p-3 bg-white/5 border border-white/10 text-cyan-200">
-                  {children}
+          <div className="w-full h-full flex flex-col p-2 animate-in fade-in slide-in-from-bottom-8 duration-700 cubic-bezier(0.16,1,0.3,1)">
+            <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-6 shrink-0 px-4">
+              <div className="flex items-center gap-6 text-left">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-cyan-400/20 blur-lg rounded-full animate-pulse" />
+                  <div className="relative p-3.5 bg-white/5 border border-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                    {children}
+                  </div>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-[Syncopate] font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/40 uppercase tracking-tighter">
-                  {id}
-                </h2>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-mono tracking-[0.3em] text-cyan-400/60 uppercase">System Active // {id}</span>
+                  </div>
+                  <h2 className="text-4xl md:text-6xl font-[Syncopate] font-bold text-white uppercase tracking-[-0.05em]">
+                    {id}
+                  </h2>
+                </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); closeSection(); }}
-                className="group/close p-3 hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
+                className="group/close relative p-4 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/20"
               >
-                <X className="w-6 h-6 text-gray-400 group-hover/close:text-white transition-colors" />
+                <div className="absolute inset-0 bg-cyan-400/0 group-hover/close:bg-cyan-400/5 transition-colors" />
+                <X className="w-6 h-6 text-gray-500 group-hover/close:text-white group-hover/close:rotate-90 transition-all duration-500 ease-out" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-4 pb-8 custom-scrollbar space-y-12">
 
               {id === 'about' && (
                 <div className="grid md:grid-cols-2 gap-12 items-start pb-12">
@@ -544,13 +581,35 @@ const Shard = ({
                     </div>
                   </div>
 
-                  <div className="relative h-[500px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
+                  <div className="relative h-[550px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
                     <img
-                      src={new URL('./assets/portfolio.png', import.meta.url).href}
+                      src={new URL('./assets/portfolio.webp', import.meta.url).href}
                       alt="Profile"
-                      className="w-full h-[550px] object-cover transition-transform duration-500 group-hover/profile:scale-4"
+                      className="w-full h-[550px] object-cover transition-transform duration-500 group-hover/profile:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+                    {/* Hover Layer */}
+                    <div className="absolute inset-0 bg-cyan-900/20 opacity-0 group-hover/profile:opacity-100 transition-all duration-700 flex flex-col justify-between p-6 overflow-hidden">
+                      <div className="flex justify-between items-start pointer-events-none">
+                        <div className="w-4 h-4 border-t border-l border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
+                        <div className="w-4 h-4 border-t border-r border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
+                      </div>
+
+                      <div className="text-center pointer-events-none transform translate-y-4 group-hover/profile:translate-y-0 transition-transform duration-500">
+                        <div className="text-[10px] font-mono text-cyan-400 mb-1 tracking-[0.5em] animate-pulse">IDENTITY_CONFIRMED</div>
+                        <div className="text-xs font-['Syncopate'] text-white tracking-widest uppercase">FAHIM KHAN</div>
+                      </div>
+
+                      <div className="flex justify-between items-end pointer-events-none">
+                        <div className="w-4 h-4 border-b border-l border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
+                        <div className="text-[8px] font-mono text-cyan-400/40 tracking-[0.2em] mb-1">CORE_ARCHITECT_v2.0</div>
+                        <div className="w-4 h-4 border-b border-r border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
+                      </div>
+
+                      {/* Scanline effect */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent h-12 -translate-y-full group-hover/profile:animate-scanline pointer-events-none"></div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -589,17 +648,43 @@ const Shard = ({
               )}
 
               {id === 'stack' && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pb-12">
                   {CONFIG.stack.map((skill, i) => {
                     let Icon = Zap;
-                    if (skill.includes('Shader') || skill.includes('WebGL')) Icon = Cpu;
-                    else if (skill.includes('React')) Icon = Code;
-                    else if (skill.includes('Design')) Icon = Palette;
+                    if (skill.includes('Shader')) Icon = Zap;
+                    else if (skill.includes('WebGL')) Icon = Box;
+                    else if (skill.includes('React')) Icon = Layout;
+                    else if (skill.includes('TypeScript')) Icon = FileCode;
+                    else if (skill.includes('GPU')) Icon = Cpu;
+                    else if (skill.includes('Tailwind')) Icon = Palette;
+                    else if (skill.includes('Rust')) Icon = Terminal;
+                    else if (skill.includes('Art')) Icon = Layers;
 
                     return (
-                      <div key={i} className="flex flex-col items-center justify-center gap-3 p-6 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-105 transition-all duration-300 group/skill">
-                        <Icon className="w-8 h-8 text-gray-500 group-hover:text-cyan-400" />
-                        <span className="font-mono text-sm font-medium text-gray-300 group-hover:text-white">{skill}</span>
+                      <div key={i} className="group/skill relative flex flex-col items-center justify-center gap-6 p-10 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all duration-500 overflow-hidden">
+                        {/* Decorative background element */}
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-white/[0.02] -rotate-45 translate-x-8 -translate-y-8 group-hover/skill:bg-cyan-500/20 transition-colors" />
+
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-cyan-400/20 blur-xl scale-0 group-hover/skill:scale-150 transition-transform duration-500 rounded-full" />
+                          <Icon className="relative w-10 h-10 text-gray-500 group-hover/skill:text-cyan-400 group-hover/skill:scale-110 transition-all duration-500" />
+                        </div>
+
+                        <div className="space-y-1 text-center">
+                          <div className="text-[9px] font-mono text-cyan-400/40 tracking-[0.3em] uppercase mb-1">Module_{i.toString().padStart(2, '0')}</div>
+                          <span className="font-mono text-sm font-bold text-gray-300 group-hover/skill:text-white transition-colors block leading-tight">
+                            {skill.split(' / ').map((part, idx) => (
+                              <React.Fragment key={idx}>
+                                {part}
+                                {idx < skill.split(' / ').length - 1 && <br />}
+                              </React.Fragment>
+                            ))}
+                          </span>
+                        </div>
+
+                        {/* Corner Accents */}
+                        <div className="absolute bottom-2 right-2 w-1 h-1 bg-white/10 group-hover/skill:bg-cyan-400 transition-colors" />
+                        <div className="absolute bottom-2 right-4 w-1 h-1 bg-white/5 group-hover/skill:bg-cyan-400/30 transition-colors" />
                       </div>
                     );
                   })}
@@ -607,51 +692,122 @@ const Shard = ({
               )}
 
               {id === 'contact' && (
-                <div className="flex flex-col md:flex-row gap-12 h-full pb-12">
-                  <div className="flex-1 flex flex-col justify-center text-left space-y-8">
-                    <h3 className="text-4xl md:text-5xl font-bold leading-tight text-white">
-                      Init Signal <br />
-                      <span className="text-cyan-400">Collaborate</span>
-                    </h3>
-                    <p className="text-gray-400 text-lg max-w-md">Reach out for project inquiries or to talk about shader engineering.</p>
-                    <button onClick={copyEmail} className="group flex items-center gap-4 w-fit px-6 py-4 bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                      <Mail className="w-5 h-5 text-cyan-400" />
-                      <span className="font-mono text-sm text-gray-300">{CONFIG.identity.email}</span>
-                      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-600" />}
-                    </button>
-                  </div>
-                  <div className="flex-1 bg-white/5 border border-white/10 p-8 flex flex-col justify-center">
-                    <form onSubmit={handleFormSubmit} className="space-y-6">
-                      <input
-                        type="text"
-                        placeholder="NAME"
-                        value={formState.name}
-                        onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
-                        disabled={status === 'sending'}
-                        className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none disabled:opacity-50"
-                      />
-                      <textarea
-                        placeholder="MESSAGE..."
-                        rows={4}
-                        value={formState.message}
-                        onChange={(e) => setFormState(prev => ({ ...prev, message: e.target.value }))}
-                        disabled={status === 'sending'}
-                        className="w-full bg-black/20 border border-white/10 p-4 text-white focus:border-cyan-500/50 outline-none resize-none disabled:opacity-50"
-                      />
-                      <button
-                        type="submit"
-                        disabled={status === 'sending'}
-                        className={`w-full py-4 font-bold transition-colors ${status === 'success' ? 'bg-green-500 text-white' :
-                          status === 'error' ? 'bg-red-500 text-white' :
-                            'bg-white text-black hover:bg-cyan-400'
-                          }`}
-                      >
-                        {status === 'sending' ? 'SENDING...' :
-                          status === 'success' ? 'PACKET SENT' :
-                            status === 'error' ? 'FAILED - TRY AGAIN' :
-                              'SEND PACKET'}
+                <div className="flex flex-col lg:flex-row gap-16 h-full pb-12 items-center">
+                  <div className="flex-1 flex flex-col justify-center text-left space-y-10 w-full">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-[1px] bg-cyan-500/50"></span>
+                        <span className="text-[10px] font-mono tracking-[0.5em] text-cyan-400 uppercase">Communication Protocol</span>
+                      </div>
+                      <h3 className="text-5xl md:text-7xl font-bold leading-[0.9] text-white tracking-tighter">
+                        TRANSMIT <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">SIGNAL</span>
+                      </h3>
+                      <p className="text-gray-400 text-lg max-w-md font-light leading-relaxed">
+                        Ready to build something extraordinary? Send a secure transmission or find me on the grid.
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <button onClick={copyEmail} className="group relative flex items-center gap-6 p-1 pr-6 bg-white/5 border border-white/10 hover:border-cyan-500/50 transition-all duration-500 rounded-full overflow-hidden">
+                        <div className="p-4 bg-cyan-500/10 rounded-full group-hover:bg-cyan-500/20 transition-colors">
+                          <Mail className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-mono text-cyan-400/60 uppercase tracking-widest leading-none mb-1">Direct Access</span>
+                          <span className="font-mono text-sm text-gray-200">{CONFIG.identity.email}</span>
+                        </div>
+                        <div className="ml-auto">
+                          {copied ? (
+                            <Check className="w-5 h-5 text-green-400 animate-in zoom-in duration-300" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors" />
+                          )}
+                        </div>
                       </button>
-                    </form>
+
+                      <div className="flex items-center gap-6 pl-4">
+                        <a href={CONFIG.identity.socials.github} target="_blank" rel="noopener noreferrer" className="group p-2 text-gray-500 hover:text-white transition-colors">
+                          <Github className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a href={CONFIG.identity.socials.linkedin} target="_blank" rel="noopener noreferrer" className="group p-2 text-gray-500 hover:text-white transition-colors">
+                          <Linkedin className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a href={CONFIG.identity.socials.twitter} target="_blank" rel="noopener noreferrer" className="group p-2 text-gray-500 hover:text-white transition-colors">
+                          <Twitter className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <div className="h-4 w-[1px] bg-white/10 mx-2"></div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+                          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Available for Hire</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 w-full max-w-xl">
+                    <div className="relative p-1 bg-gradient-to-br from-white/10 to-transparent">
+                      <div className="bg-[#050505] p-8 md:p-12 space-y-8 relative overflow-hidden">
+                        {/* Shard decoration overlay */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] pointer-events-none" />
+
+                        <form onSubmit={handleFormSubmit} className="space-y-8 relative z-10">
+                          <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-mono text-cyan-400/40 group-focus-within/input:text-cyan-400 transition-colors tracking-[0.3em] uppercase block pl-1">01. Identity Name</label>
+                            <input
+                              type="text"
+                              placeholder="Type your name..."
+                              value={formState.name}
+                              onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                              disabled={status === 'sending'}
+                              className="w-full bg-white/[0.03] border border-white/5 p-5 text-white focus:border-cyan-500/50 focus:bg-white/[0.05] outline-none transition-all disabled:opacity-50 font-light"
+                            />
+                          </div>
+
+                          <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-mono text-cyan-400/40 group-focus-within/input:text-cyan-400 transition-colors tracking-[0.3em] uppercase block pl-1">02. Sequence Data</label>
+                            <textarea
+                              placeholder="Share your vision..."
+                              rows={5}
+                              value={formState.message}
+                              onChange={(e) => setFormState(prev => ({ ...prev, message: e.target.value }))}
+                              disabled={status === 'sending'}
+                              className="w-full bg-white/[0.03] border border-white/5 p-5 text-white focus:border-cyan-500/50 focus:bg-white/[0.05] outline-none resize-none transition-all disabled:opacity-50 font-light"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={status === 'sending'}
+                            className={`group relative w-full py-6 font-bold tracking-[0.2em] transition-all duration-500 overflow-hidden ${status === 'success' ? 'bg-green-500 text-white' :
+                              status === 'error' ? 'bg-red-500 text-white' :
+                                'bg-white text-black hover:bg-cyan-400'
+                              }`}
+                          >
+                            <div className="relative z-10 flex items-center justify-center gap-3">
+                              {status === 'sending' ? (
+                                <>
+                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce"></span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                  <span>{status === 'success' ? 'DATA TRANSMITTED' : status === 'error' ? 'RETRY SIGNAL' : 'SEND SIGNAL'}</span>
+                                </>
+                              )}
+                            </div>
+                            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          </button>
+                        </form>
+
+                        <div className="pt-4 flex justify-between items-center text-[9px] font-mono text-white/20 tracking-widest uppercase">
+                          <span>Security: Encrypted</span>
+                          <span>ST: {new Date().toLocaleTimeString()}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -664,8 +820,9 @@ const Shard = ({
 };
 
 const Page = () => {
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<SectionId | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -675,22 +832,30 @@ const Page = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
     if (activeSection) return;
     const { clientX, clientY, currentTarget } = e;
     const { width, height } = currentTarget.getBoundingClientRect();
     const x = (clientX / width) * 2 - 1;
     const y = (clientY / height) * 2 - 1;
-    setMousePos({ x, y });
-  };
 
-  const closeSection = () => setActiveSection(null);
+    mouseRef.current = { x, y };
+
+    if (containerRef.current) {
+      containerRef.current.style.setProperty('--mx', x.toString());
+      containerRef.current.style.setProperty('--my', y.toString());
+    }
+  }, [activeSection]);
+
+  const closeSection = useCallback(() => setActiveSection(null), []);
 
   return (
-    <RootLayout mousePos={mousePos}>
+    <RootLayout mouseRef={mouseRef}>
       <div
+        ref={containerRef}
         onMouseMove={handleMouseMove}
         className="relative w-full h-full flex items-center justify-center overflow-hidden"
+        style={{ '--mx': '0', '--my': '0' } as any}
       >
         {!activeSection && (
           <div className="absolute top-4 left-4 md:top-8 md:left-8 pointer-events-none z-0 transition-opacity duration-700">
@@ -705,7 +870,7 @@ const Page = () => {
 
           <div
             className={`absolute transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${activeSection ? 'opacity-0 scale-90 blur-lg pointer-events-none translate-y-[-50px]' : 'opacity-100 scale-100 blur-0'}`}
-            style={{ transform: `translate(${mousePos.x * -15}px, ${mousePos.y * -15}px)` }}
+            style={{ transform: `translate(calc(var(--mx) * -15px), calc(var(--my) * -15px))` }}
           >
             <div className="text-center z-10 p-12 relative group cursor-default">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-cyan-500/20 rounded-full blur-[50px] group-hover:bg-cyan-400/30 transition-colors duration-700"></div>
@@ -729,7 +894,6 @@ const Page = () => {
                 ? `translate(${shard.x * 0.4}px, ${shard.y * 0.5}px) rotate(${shard.r}deg)`
                 : `translate(${shard.x}px, ${shard.y}px) rotate(${shard.r}deg)`}
               className={`${shard.w} ${shard.h} ${shard.s}`}
-              mousePos={mousePos}
               activeSection={activeSection}
             />
           ))}
@@ -740,7 +904,6 @@ const Page = () => {
             delay={1}
             baseTransform={isMobile ? "translate(-80px, -100px) rotate(-4deg)" : "translate(-180px, -140px) rotate(-8deg)"}
             className="w-28 h-36 md:w-40 md:h-52 clip-polygon-1"
-            mousePos={mousePos}
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -753,7 +916,6 @@ const Page = () => {
             delay={2}
             baseTransform={isMobile ? "translate(80px, -70px) rotate(4deg)" : "translate(200px, -100px) rotate(6deg)"}
             className="w-32 h-32 md:w-48 md:h-48 clip-polygon-2"
-            mousePos={mousePos}
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -766,7 +928,6 @@ const Page = () => {
             delay={3}
             baseTransform={isMobile ? "translate(-70px, 90px) rotate(8deg)" : "translate(-140px, 180px) rotate(12deg)"}
             className="w-24 h-24 md:w-36 md:h-36 clip-polygon-3"
-            mousePos={mousePos}
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -779,7 +940,6 @@ const Page = () => {
             delay={4}
             baseTransform={isMobile ? "translate(70px, 110px) rotate(-4deg)" : "translate(180px, 150px) rotate(-6deg)"}
             className="w-28 h-40 md:w-40 md:h-52 clip-polygon-4"
-            mousePos={mousePos}
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -808,6 +968,12 @@ const Page = () => {
           .custom-scrollbar::-webkit-scrollbar { width: 4px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
+
+          @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(550px); }
+          }
+          .animate-scanline { animation: scanline 4s linear infinite; }
         `}</style>
       </div>
     </RootLayout>
