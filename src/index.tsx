@@ -473,7 +473,7 @@ const Shard = ({
       className={`
         absolute cursor-pointer group will-change-transform
         ${isHidden ? 'opacity-0 scale-75 pointer-events-none blur-md' : 'opacity-100 scale-100'}
-        ${isActive ? 'z-50 !transform-none inset-0 md:inset-8 w-auto h-auto m-0 cursor-default' : className}
+        ${isActive ? 'z-50 !transform-none inset-x-0 inset-y-0 md:inset-8 w-auto h-auto m-0 cursor-default' : className}
         ${!isActive && !isHidden ? hoverGlassStyle : ''}
         ${glassStyle}
       `}
@@ -509,7 +509,7 @@ const Shard = ({
       )}
 
       <div className={`
-        relative w-full h-full flex flex-col items-center justify-center p-6 text-center 
+        relative w-full h-full flex flex-col items-center justify-center p-2 text-center 
         transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100 group-hover:scale-105'}
       `}>
@@ -525,67 +525,67 @@ const Shard = ({
         )}
 
         {isActive && (
-          <div className="w-full h-full flex flex-col p-2 animate-in fade-in slide-in-from-bottom-8 duration-700 cubic-bezier(0.16,1,0.3,1)">
-            <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-6 shrink-0 px-4">
-              <div className="flex items-center gap-6 text-left">
+          <div className="w-full h-full flex flex-col pt-4 md:pt-6 px-0 md:px-6 animate-in fade-in slide-in-from-bottom-8 duration-700 cubic-bezier(0.16,1,0.3,1)">
+            <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-3 shrink-0 px-3 md:px-4">
+              <div className="flex items-center gap-2 md:gap-6 text-left">
                 <div className="relative">
-                  <div className="absolute -inset-2 bg-cyan-400/20 blur-lg rounded-full animate-pulse" />
-                  <div className="relative p-3.5 bg-white/5 border border-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                  <div className="absolute -inset-1 bg-cyan-400/20 blur-md rounded-full animate-pulse" />
+                  <div className="relative p-1.5 md:p-3.5 bg-white/5 border border-white/10 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
                     {children}
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-mono tracking-[0.3em] text-cyan-400/60 uppercase">System Active // {id}</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="w-1 h-1 bg-cyan-400 rounded-full animate-pulse" />
+                    <span className="text-[7px] md:text-[10px] font-mono tracking-[0.2em] md:tracking-[0.3em] text-cyan-400/60 uppercase truncate">System Active // {id}</span>
                   </div>
-                  <h2 className="text-4xl md:text-6xl font-[Syncopate] font-bold text-white uppercase tracking-[-0.05em]">
+                  <h2 className="text-xl md:text-5xl font-[Syncopate] font-bold text-white uppercase tracking-[-0.05em] leading-none">
                     {id}
                   </h2>
                 </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); closeSection(); }}
-                className="group/close relative p-4 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/20"
+                className="group/close relative p-1.5 md:p-4 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/20 shrink-0"
               >
                 <div className="absolute inset-0 bg-cyan-400/0 group-hover/close:bg-cyan-400/5 transition-colors" />
-                <X className="w-6 h-6 text-gray-500 group-hover/close:text-white group-hover/close:rotate-90 transition-all duration-500 ease-out" />
+                <X className="w-4 h-4 md:w-6 md:h-6 text-gray-500 group-hover/close:text-white group-hover/close:rotate-90 transition-all duration-500 ease-out" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-8 custom-scrollbar space-y-12">
+            <div className="flex-1 overflow-y-auto px-3 md:px-4 pb-8 custom-scrollbar space-y-8">
 
               {id === 'about' && (
-                <div className="grid md:grid-cols-2 gap-12 items-start pb-12">
-                  <div className="space-y-6 text-lg text-gray-300 leading-relaxed text-left">
-                    <p className="text-3xl font-light text-white mb-6">
+                <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start pb-12">
+                  <div className="space-y-6 text-left">
+                    <p className="text-lg md:text-3xl font-light text-white mb-4 leading-snug">
                       {CONFIG.about.headline.split('&').map((part, i) => (
-                        <span key={i}>
+                        <React.Fragment key={i}>
                           {part} {i === 0 && <span className="text-cyan-400">&</span>}<br />
-                        </span>
+                        </React.Fragment>
                       ))}
                     </p>
                     {CONFIG.about.bio.map((paragraph, i) => (
-                      <p key={i}>{paragraph}</p>
+                      <p key={i} className="text-sm md:text-lg text-gray-300 leading-relaxed">{paragraph}</p>
                     ))}
 
-                    <div className="pt-8 flex gap-8">
+                    <div className="pt-4 flex gap-6">
                       <div>
-                        <div className="text-4xl font-bold text-white mb-1">{yearsExp}</div>
-                        <div className="text-xs uppercase tracking-widest text-cyan-400/80">Years Exp</div>
+                        <div className="text-2xl md:text-4xl font-bold text-white mb-0.5">{yearsExp}</div>
+                        <div className="text-[10px] md:text-xs uppercase tracking-widest text-cyan-400/80">Years Exp</div>
                       </div>
                       <div>
-                        <div className="text-4xl font-bold text-white mb-1">{CONFIG.stats.completedProjects}</div>
-                        <div className="text-xs uppercase tracking-widest text-cyan-400/80">Projects</div>
+                        <div className="text-2xl md:text-4xl font-bold text-white mb-0.5">{CONFIG.stats.completedProjects}</div>
+                        <div className="text-[10px] md:text-xs uppercase tracking-widest text-cyan-400/80">Projects</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="relative h-[550px] w-full max-w-[400px] mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
+                  <div className="relative h-[530px] md:h-[550px] w-full md:max-w-[400px] md:mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
                     <img
                       src={new URL('./assets/portfolio.webp', import.meta.url).href}
                       alt="Profile"
-                      className="w-full h-[550px] object-cover transition-transform duration-500 group-hover/profile:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover/profile:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
@@ -616,29 +616,29 @@ const Shard = ({
 
               {id === 'projects' && (
                 <div className="flex flex-col h-full">
-                  <div className="flex flex-wrap gap-4 mb-8">
+                  <div className="flex flex-wrap gap-2 md:gap-4 mb-6">
                     {categories.map(cat => (
                       <button
                         key={cat}
                         onClick={(e) => { e.stopPropagation(); setActiveFilter(cat); }}
-                        className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all duration-300 border ${activeFilter === cat ? 'bg-cyan-500/20 border-cyan-500/50 text-white' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30 hover:text-white'}`}
+                        className={`px-3 py-1.5 text-[9px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 border ${activeFilter === cat ? 'bg-cyan-500/20 border-cyan-500/50 text-white' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30 hover:text-white'}`}
                       >
                         {cat}
                       </button>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-8">
                     {filteredProjects.map((p) => (
-                      <div key={p.id} className="group/card relative flex flex-col p-8 bg-black/20 border border-white/10 hover:border-cyan-500/30 hover:bg-white/5 transition-all duration-500 overflow-hidden text-left">
+                      <div key={p.id} className="group/card relative flex flex-col p-5 md:p-8 bg-black/20 border border-white/10 hover:border-cyan-500/30 hover:bg-white/5 transition-all duration-500 overflow-hidden text-left">
                         <div className="mb-2">
-                          <span className="text-[10px] text-cyan-500/80 font-mono border border-cyan-500/20 px-2 py-1 uppercase">{p.category}</span>
+                          <span className="text-[8px] md:text-[10px] text-cyan-500/80 font-mono border border-cyan-500/20 px-1.5 py-0.5 uppercase">{p.category}</span>
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-3 group-hover/card:text-cyan-200 transition-colors">{p.title}</h3>
-                        <p className="text-gray-400 mb-6 text-sm leading-relaxed">{p.desc}</p>
-                        <div className="flex flex-wrap gap-2 mt-auto">
+                        <h3 className="text-lg md:text-2xl font-bold text-white mb-2 group-hover/card:text-cyan-200 transition-colors">{p.title}</h3>
+                        <p className="text-gray-400 mb-4 text-xs md:text-sm leading-relaxed">{p.desc}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-auto">
                           {p.tech.map(t => (
-                            <span key={t} className="text-[10px] font-mono uppercase px-3 py-1.5 bg-white/5 text-cyan-100/60 border border-white/5 group-hover:border-cyan-500/20">{t}</span>
+                            <span key={t} className="text-[8px] md:text-[10px] font-mono uppercase px-2 py-1 bg-white/5 text-cyan-100/60 border border-white/5 group-hover:border-cyan-500/20">{t}</span>
                           ))}
                         </div>
                       </div>
