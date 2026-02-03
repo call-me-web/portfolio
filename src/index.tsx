@@ -185,9 +185,9 @@ const CONFIG = {
     role: "Creative Engineer & Software Architect",
     email: "fahimkhanh696@gmail.com",
     socials: {
-      github: "https://github.com",
-      linkedin: "https://linkedin.com",
-      twitter: "https://twitter.com"
+      // github: "https://github.com",
+      linkedin: "https://www.linkedin.com/in/fahim-khan-132525292",
+      // twitter: "https://twitter.com"
     }
   },
   stats: {
@@ -397,15 +397,14 @@ const Shard = ({
   const isHidden = activeSection !== null && activeSection !== id;
   const [copied, setCopied] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>('All');
-  const [formState, setFormState] = useState({ name: '', message: '' });
-
+  const [formState, setFormState] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   // Reset states when section closes
   useEffect(() => {
     if (!isActive) {
       setCopied(false);
-      setFormState({ name: '', message: '' });
+      setFormState({ name: '', email: '', message: '' });
       setStatus('idle');
       setActiveFilter('All');
     }
@@ -420,14 +419,12 @@ const Shard = ({
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formState.name || !formState.message) return;
+    if (!formState.name || !formState.email || !formState.message) return;
 
     setStatus('sending');
 
-    // Validate EmailJS configuration at runtime to provide a clearer error message
     const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
     if (!emailjsPublicKey) {
-      console.error('EmailJS Error: VITE_EMAILJS_PUBLIC_KEY is not set. Ensure you set this env var at build time.');
       setStatus('error');
       setTimeout(() => setStatus('idle'), 5000);
       return;
@@ -440,12 +437,12 @@ const Shard = ({
         {
           from_name: formState.name,
           message: formState.message,
-          reply_to: CONFIG.identity.email,
+          reply_to: formState.email,
         },
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
       setStatus('success');
-      setFormState({ name: '', message: '' });
+      setFormState({ name: '', email: '', message: '' });
       setTimeout(() => setStatus('idle'), 5000);
     } catch (error) {
       console.error('EmailJS Error:', error);
@@ -747,65 +744,101 @@ const Shard = ({
 
                   <div className="flex-1 w-full max-w-xl">
                     <div className="relative p-1 bg-gradient-to-br from-white/10 to-transparent">
-                      <div className="bg-[#050505] p-8 md:p-12 space-y-8 relative overflow-hidden">
-                        {/* Shard decoration overlay */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] pointer-events-none" />
+                      <div className="bg-[#050505] p-6 md:p-10 h-[450px] md:h-[500px] flex flex-col relative overflow-hidden">
 
-                        <form onSubmit={handleFormSubmit} className="space-y-8 relative z-10">
-                          <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-mono text-cyan-400/40 group-focus-within/input:text-cyan-400 transition-colors tracking-[0.3em] uppercase block pl-1">01. Identity Name</label>
-                            <input
-                              type="text"
-                              placeholder="Type your name..."
-                              value={formState.name}
-                              onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
-                              disabled={status === 'sending'}
-                              className="w-full bg-white/[0.03] border border-white/5 p-5 text-white focus:border-cyan-500/50 focus:bg-white/[0.05] outline-none transition-all disabled:opacity-50 font-light"
-                            />
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-3">
+                          <div className="flex items-center gap-2 text-cyan-400">
+                            <Terminal className="w-4 h-4" />
+                            <span className="text-xs font-mono tracking-widest uppercase">Secure Transmission</span>
                           </div>
-
-                          <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-mono text-cyan-400/40 group-focus-within/input:text-cyan-400 transition-colors tracking-[0.3em] uppercase block pl-1">02. Sequence Data</label>
-                            <textarea
-                              placeholder="Share your vision..."
-                              rows={5}
-                              value={formState.message}
-                              onChange={(e) => setFormState(prev => ({ ...prev, message: e.target.value }))}
-                              disabled={status === 'sending'}
-                              className="w-full bg-white/[0.03] border border-white/5 p-5 text-white focus:border-cyan-500/50 focus:bg-white/[0.05] outline-none resize-none transition-all disabled:opacity-50 font-light"
-                            />
+                          <div className="flex gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-red-500/50" />
+                            <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
+                            <div className="w-2 h-2 rounded-full bg-green-500/50" />
                           </div>
+                        </div>
 
-                          <button
-                            type="submit"
-                            disabled={status === 'sending'}
-                            className={`group relative w-full py-6 font-bold tracking-[0.2em] transition-all duration-500 overflow-hidden ${status === 'success' ? 'bg-green-500 text-white' :
-                              status === 'error' ? 'bg-red-500 text-white' :
-                                'bg-white text-black hover:bg-cyan-400'
-                              }`}
-                          >
-                            <div className="relative z-10 flex items-center justify-center gap-3">
+                        {/* Form */}
+                        {status === 'success' ? (
+                          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center border border-green-500/20">
+                              <Check className="w-8 h-8 text-green-400" />
+                            </div>
+                            <h4 className="text-2xl text-white font-bold">Transmission Sent</h4>
+                            <p className="text-gray-400 text-sm max-w-xs">Your signal has been encrypted and delivered successfully.</p>
+                            <button
+                              onClick={() => setStatus('idle')}
+                              className="mt-6 px-6 py-2 bg-white/5 border border-white/10 text-xs font-mono text-cyan-400 uppercase tracking-widest hover:bg-white/10 transition-colors"
+                            >
+                              Send Another
+                            </button>
+                          </div>
+                        ) : (
+                          <form onSubmit={handleFormSubmit} className="flex flex-col gap-6 h-full">
+                            <div className="space-y-4">
+                              <div className="group border-b border-white/10 focus-within:border-cyan-400/50 transition-colors">
+                                <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1 block">Identity</label>
+                                <input
+                                  type="text"
+                                  value={formState.name}
+                                  onChange={e => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                                  placeholder="ENTER YOUR NAME"
+                                  required
+                                  className="w-full bg-transparent p-2 text-white placeholder-white/20 outline-none font-mono text-sm"
+                                />
+                              </div>
+                              <div className="group border-b border-white/10 focus-within:border-cyan-400/50 transition-colors">
+                                <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1 block">Frequency (Email)</label>
+                                <input
+                                  type="email"
+                                  value={formState.email}
+                                  onChange={e => setFormState(prev => ({ ...prev, email: e.target.value }))}
+                                  placeholder="ENTER YOUR EMAIL"
+                                  required
+                                  className="w-full bg-transparent p-2 text-white placeholder-white/20 outline-none font-mono text-sm"
+                                />
+                              </div>
+                              <div className="group border-b border-white/10 focus-within:border-cyan-400/50 transition-colors h-32">
+                                <label className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1 block">Signal</label>
+                                <textarea
+                                  value={formState.message}
+                                  onChange={e => setFormState(prev => ({ ...prev, message: e.target.value }))}
+                                  placeholder="ENTER YOUR MESSAGE..."
+                                  required
+                                  className="w-full h-full bg-transparent p-2 text-white placeholder-white/20 outline-none font-mono text-sm resize-none custom-scrollbar"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={status === 'sending'}
+                              className="mt-auto w-full py-4 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-xs tracking-[0.2em] uppercase hover:bg-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                            >
                               {status === 'sending' ? (
                                 <>
-                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                  <span className="w-2 h-2 bg-black rounded-full animate-bounce"></span>
+                                  <span className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+                                  Encrypting...
                                 </>
                               ) : (
                                 <>
-                                  <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                                  <span>{status === 'success' ? 'DATA TRANSMITTED' : status === 'error' ? 'RETRY SIGNAL' : 'SEND SIGNAL'}</span>
+                                  Transmit Signal
+                                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </>
                               )}
-                            </div>
-                            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                          </button>
-                        </form>
+                            </button>
+                            {status === 'error' && (
+                              <div className="text-red-400 text-xs font-mono text-center mt-2">
+                                Connection Protocol Failed. Please retry.
+                              </div>
+                            )}
+                          </form>
+                        )}
 
-                        <div className="pt-4 flex justify-between items-center text-[9px] font-mono text-white/20 tracking-widest uppercase">
-                          <span>Security: Encrypted</span>
-                          <span>ST: {new Date().toLocaleTimeString()}</span>
-                        </div>
+                        {/* Background Decor */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] pointer-events-none" />
                       </div>
                     </div>
                   </div>
