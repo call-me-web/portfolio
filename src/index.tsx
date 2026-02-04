@@ -208,7 +208,7 @@ const CONFIG = {
       id: "p2",
       title: "News Site",
       category: "MVP",
-      desc: "Holographic dashboard system for real-time sensor data visualization.",
+      desc: "A modern website with a classic look, where creative people share memes, rumors, and original art.",
       tech: ["Next.js", "TypeScript", "React"],
       link: "https://news.gujab9.workers.dev/"
     },
@@ -220,22 +220,22 @@ const CONFIG = {
       tech: ["Tailwind", "GLSL", "Next.js"],
       link: "https://call-me-web.github.io/portfolio/"
     },
-    {
-      id: "p1",
-      title: "Prism Core",
-      category: "Website",
-      desc: "A custom GLSL raymarching engine built for reactive audio visualizations.",
-      tech: ["WebGL", "GLSL", "WebAudio"],
-      link: "#"
-    },
-    {
-      id: "p4",
-      title: "Aero Engine",
-      category: "Website",
-      desc: "Browser-based particle system handling 1M+ particles using GPGPU.",
-      tech: ["WebGL 2.0", "D3.js", "Svelte"],
-      link: "#"
-    }
+    // {
+    //   id: "p1",
+    //   title: "Prism Core",
+    //   category: "Website",
+    //   desc: "A custom GLSL raymarching engine built for reactive audio visualizations.",
+    //   tech: ["WebGL", "GLSL", "WebAudio"],
+    //   link: "#"
+    // },
+    // {
+    //   id: "p4",
+    //   title: "Aero Engine",
+    //   category: "Website",
+    //   desc: "Browser-based particle system handling 1M+ particles using GPGPU.",
+    //   tech: ["WebGL 2.0", "D3.js", "Svelte"],
+    //   link: "#"
+    // }
   ],
   stack: [
     "GLSL Shaders", "WebGL / Three.js", "React / Next.js", "TypeScript",
