@@ -185,9 +185,9 @@ const CONFIG = {
     role: "Creative Engineer & Software Architect",
     email: "fahimkhanh696@gmail.com",
     socials: {
-      // github: "https://github.com",
+      github: "https://github.com/call-me-web",
       linkedin: "https://www.linkedin.com/in/fahim-khan-132525292",
-      // twitter: "https://twitter.com"
+      twitter: "https://twitter.com"
     }
   },
   stats: {
@@ -291,7 +291,7 @@ type SectionId = 'home' | 'about' | 'projects' | 'stack' | 'contact';
 const Background = memo(({ mouseRef }: { mouseRef: React.RefObject<{ x: number, y: number }> }) => (
   <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-[#020202]">
     <WebGLBackground mouseRef={mouseRef} />
-    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay"></div>
+    <div className="absolute inset-0 bg-[url('./assets/noise.svg')] opacity-[0.08] mix-blend-overlay"></div>
   </div>
 ));
 
