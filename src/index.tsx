@@ -203,21 +203,14 @@ const CONFIG = {
     ]
   },
   projects: [
-    {
-      id: "p1",
-      title: "Prism Core",
-      category: "Website",
-      desc: "A custom GLSL raymarching engine built for reactive audio visualizations.",
-      tech: ["WebGL", "GLSL", "WebAudio"],
-      link: "#"
-    },
+
     {
       id: "p2",
-      title: "Void Shell",
-      category: "App",
+      title: "News Site",
+      category: "MVP",
       desc: "Holographic dashboard system for real-time sensor data visualization.",
-      tech: ["Three.js", "TypeScript", "React"],
-      link: "#"
+      tech: ["Next.js", "TypeScript", "React"],
+      link: "https://news.gujab9.workers.dev/"
     },
     {
       id: "p3",
@@ -225,6 +218,14 @@ const CONFIG = {
       category: "Design",
       desc: "A framework for physically-based UI elements that react to dynamic lighting.",
       tech: ["Tailwind", "GLSL", "Next.js"],
+      link: "https://call-me-web.github.io/portfolio/"
+    },
+    {
+      id: "p1",
+      title: "Prism Core",
+      category: "Website",
+      desc: "A custom GLSL raymarching engine built for reactive audio visualizations.",
+      tech: ["WebGL", "GLSL", "WebAudio"],
       link: "#"
     },
     {
@@ -627,9 +628,17 @@ const Shard = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-8">
                     {filteredProjects.map((p) => (
-                      <div key={p.id} className="group/card relative flex flex-col p-5 md:p-8 bg-black/20 border border-white/10 hover:border-cyan-500/30 hover:bg-white/5 transition-all duration-500 overflow-hidden text-left">
-                        <div className="mb-2">
+                      <a
+                        key={p.id}
+                        href={p.link !== '#' ? p.link : undefined}
+                        target={p.link !== '#' ? "_blank" : undefined}
+                        rel={p.link !== '#' ? "noopener noreferrer" : undefined}
+                        onClick={(e) => p.link === '#' && e.preventDefault()}
+                        className={`group/card relative flex flex-col p-5 md:p-8 bg-black/20 border border-white/10 hover:border-cyan-500/30 hover:bg-white/5 transition-all duration-500 overflow-hidden text-left ${p.link !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
                           <span className="text-[8px] md:text-[10px] text-cyan-500/80 font-mono border border-cyan-500/20 px-1.5 py-0.5 uppercase">{p.category}</span>
+                          {p.link !== '#' && <ExternalLink className="w-3 h-3 md:w-4 md:h-4 text-white/20 group-hover/card:text-cyan-400 transition-colors" />}
                         </div>
                         <h3 className="text-lg md:text-2xl font-bold text-white mb-2 group-hover/card:text-cyan-200 transition-colors">{p.title}</h3>
                         <p className="text-gray-400 mb-4 text-xs md:text-sm leading-relaxed">{p.desc}</p>
@@ -638,7 +647,7 @@ const Shard = ({
                             <span key={t} className="text-[8px] md:text-[10px] font-mono uppercase px-2 py-1 bg-white/5 text-cyan-100/60 border border-white/5 group-hover:border-cyan-500/20">{t}</span>
                           ))}
                         </div>
-                      </div>
+                      </a>
                     ))}
                   </div>
                 </div>
