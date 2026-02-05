@@ -192,7 +192,7 @@ const CONFIG = {
   },
   stats: {
     startYear: 2022,
-    completedProjects: "15+",
+    completedProjects: "10+",
     clients: 9
   },
   about: {
@@ -218,7 +218,7 @@ const CONFIG = {
       category: "Design",
       desc: "A framework for physically-based UI elements that react to dynamic lighting.",
       tech: ["Tailwind", "GLSL", "Next.js"],
-      link: "https://call-me-web.github.io/portfolio/"
+      link: "https://portfolio.fahimkhanh696.workers.dev"
     },
     // {
     //   id: "p1",
