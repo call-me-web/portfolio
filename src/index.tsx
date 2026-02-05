@@ -209,7 +209,7 @@ const CONFIG = {
       title: "News Site",
       category: "MVP",
       desc: "A modern website with a classic look, where creative people share memes, rumors, and original art.",
-      tech: ["Next.js", "TypeScript", "React"],
+      tech: ["Vite", "TypeScript", "React", "Tailwind", "PostgreSQL"],
       link: "https://news.gujab9.workers.dev/"
     },
     {
@@ -217,7 +217,7 @@ const CONFIG = {
       title: "Glass-Cut UI",
       category: "Design",
       desc: "A framework for physically-based UI elements that react to dynamic lighting.",
-      tech: ["Tailwind", "GLSL", "Next.js"],
+      tech: ["Tailwind", "GLSL", "Vite"],
       link: "https://portfolio.fahimkhanh696.workers.dev"
     },
     // {
