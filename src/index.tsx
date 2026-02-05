@@ -579,7 +579,7 @@ const Shard = ({
                     </div>
                   </div>
 
-                  <div className="relative h-[530px] md:h-[550px] w-full md:max-w-[400px] md:mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
+                  <div className="relative h-[530px] md:h-[450px] w-full md:max-w-[400px] md:mx-auto overflow-hidden border border-white/10 bg-gray-800 bg-gradient-to-br from-white/5 to-transparent group/profile">
                     <img
                       src={new URL('./assets/portfolio.webp', import.meta.url).href}
                       alt="Profile"
