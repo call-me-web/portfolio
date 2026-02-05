@@ -587,14 +587,14 @@ const Shard = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
-                    {/* Hover Layer */}
-                    <div className="absolute inset-0 bg-cyan-900/20 opacity-0 group-hover/profile:opacity-100 transition-all duration-700 flex flex-col justify-between p-6 overflow-hidden">
+                    {/* Hover Layer - Updated for Mobile Visibility */}
+                    <div className="absolute inset-0 bg-cyan-900/40 md:bg-cyan-900/20 md:opacity-0 group-hover/profile:opacity-100 transition-all duration-700 flex flex-col justify-between p-6 overflow-hidden">
                       <div className="flex justify-between items-start pointer-events-none">
                         <div className="w-4 h-4 border-t border-l border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
                         <div className="w-4 h-4 border-t border-r border-cyan-400/50 group-hover/profile:border-cyan-400 transition-colors duration-500"></div>
                       </div>
 
-                      <div className="text-center pointer-events-none transform translate-y-4 group-hover/profile:translate-y-0 transition-transform duration-500">
+                      <div className="text-center pointer-events-none transform md:translate-y-4 group-hover/profile:translate-y-0 transition-transform duration-500">
                         <div className="text-[10px] font-mono text-cyan-400 mb-1 tracking-[0.5em] animate-pulse">IDENTITY_CONFIRMED</div>
                         <div className="text-xs font-['Syncopate'] text-white tracking-widest uppercase">FAHIM KHAN</div>
                       </div>
@@ -933,7 +933,7 @@ const Page = () => {
               key={i}
               delay={shard.d}
               baseTransform={isMobile
-                ? `translate(${shard.x * 0.4}px, ${shard.y * 0.5}px) rotate(${shard.r}deg)`
+                ? `translate(${shard.x * 0.3}px, ${shard.y * 0.4}px) rotate(${shard.r}deg)`
                 : `translate(${shard.x}px, ${shard.y}px) rotate(${shard.r}deg)`}
               className={`${shard.w} ${shard.h} ${shard.s}`}
               activeSection={activeSection}
@@ -944,8 +944,8 @@ const Page = () => {
           <Shard
             id="about"
             delay={1}
-            baseTransform={isMobile ? "translate(-80px, -100px) rotate(-4deg)" : "translate(-180px, -140px) rotate(-8deg)"}
-            className="w-28 h-36 md:w-40 md:h-52 clip-polygon-1"
+            baseTransform={isMobile ? "translate(-60px, -120px) rotate(-4deg)" : "translate(-180px, -140px) rotate(-8deg)"}
+            className="w-24 h-32 md:w-40 md:h-52 clip-polygon-1"
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -956,8 +956,8 @@ const Page = () => {
           <Shard
             id="projects"
             delay={2}
-            baseTransform={isMobile ? "translate(80px, -70px) rotate(4deg)" : "translate(200px, -100px) rotate(6deg)"}
-            className="w-32 h-32 md:w-48 md:h-48 clip-polygon-2"
+            baseTransform={isMobile ? "translate(60px, -80px) rotate(4deg)" : "translate(200px, -100px) rotate(6deg)"}
+            className="w-28 h-28 md:w-48 md:h-48 clip-polygon-2"
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -968,8 +968,8 @@ const Page = () => {
           <Shard
             id="stack"
             delay={3}
-            baseTransform={isMobile ? "translate(-70px, 90px) rotate(8deg)" : "translate(-140px, 180px) rotate(12deg)"}
-            className="w-24 h-24 md:w-36 md:h-36 clip-polygon-3"
+            baseTransform={isMobile ? "translate(-60px, 80px) rotate(8deg)" : "translate(-140px, 180px) rotate(12deg)"}
+            className="w-20 h-20 md:w-36 md:h-36 clip-polygon-3"
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}
@@ -980,8 +980,8 @@ const Page = () => {
           <Shard
             id="contact"
             delay={4}
-            baseTransform={isMobile ? "translate(70px, 110px) rotate(-4deg)" : "translate(180px, 150px) rotate(-6deg)"}
-            className="w-28 h-40 md:w-40 md:h-52 clip-polygon-4"
+            baseTransform={isMobile ? "translate(60px, 120px) rotate(-4deg)" : "translate(180px, 150px) rotate(-6deg)"}
+            className="w-24 h-36 md:w-40 md:h-52 clip-polygon-4"
             activeSection={activeSection}
             setActiveSection={setActiveSection}
             closeSection={closeSection}

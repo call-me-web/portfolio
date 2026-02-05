@@ -7,8 +7,10 @@
 }
 
 @layer base {
+
+  html,
   body {
-    @apply m-0 p-0 bg-[#050505] text-white font-space overflow-x-hidden;
+    @apply m-0 p-0 bg-[#050505] text-white font-space overflow-x-hidden w-full;
   }
 }
 
@@ -35,8 +37,13 @@
 }
 
 @keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(1000%);
+  }
 }
 
 .animate-scanline {
